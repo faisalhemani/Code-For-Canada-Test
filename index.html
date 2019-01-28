@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>title</title>
+  <style type="text/css">
+
+  </style>
+  </head>
+  <body>
+    <input type="file" onchange="readFile(this.files[0])">
+    <div id="show"></div>
+    <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.js"></script>
+  <script src="http://evanplaice.github.io/jquery-csv/src/jquery.csv.min.js"></script>
+  <script type="text/javascript">
+   function readFile(file) {
+        r = new FileReader();
+        r.onloadend = function() {
+           console.log(csvJSON(this.result));
+           var json = csvJSON(this.result);
+           getVals(json);
+         };
+         r.readAsText(file);
+    }
+   function csvJSON(csv){
+     var lines=csv.split("\n");
+     var result = [];
+     var headers=lines[0].split(",");
+     for(var i=1;i<lines.length;i++){
+	      var obj = {};
+	       var currentline=lines[i].split(",");
+	        for(var j=0;j<headers.length;j++){
+		          obj[headers[j]] = currentline[j];
+	        }
+	      result.push(obj);
+      }
+  //return result; //JavaScript object
+  return JSON.stringify(result); //JSON
+}
+
+function getVals(json){
+  var obj = JSON.parse(json);
+  var violations = ["Garbage and Refuse", "Unsanitary Conditions", "Animals and Pests", "Building Conditions", "Vegetation", "Chemical Hazards", "Biohazards", "Air Pollutants and Odors", "Retail Food"];
+  var violationNums = [0,0,0,0,0,0,0,0,0];
+  var earlyDates = [32882475600000,32882475600000,32882475600000,32882475600000,32882475600000,32882475600000,32882475600000,32882475600000,32882475600000];
+  var LateDates = [0,0,0,0,0,0,0,0,0];
+  var f = violations.indexOf(obj[1].violation_category);
+  console.log(obj.length);
+  for(var i=0; i<=obj.length-1; i++){
+    var index = violations.indexOf(obj[i].violation_category);
+    console.log("z= " +index);
+    if(index != -1){
+      violationNums[index]++;
+    }
+    console.log(obj[i].violation_date);
+    var date = Date.parse(obj[i].violation_date);
+    console.log(date);
+    if(date > LateDates[index]){
+      LateDates[index] = date;
+    }
+    if(date < earlyDates[index]){
+      earlyDates[index] = date;
+    }
+  }
+  for(var j=0; j<=earlyDates.length-1; j++){
+    earlyDates[j] = moment(earlyDates[j]).format('YYYY-MM-DD');
+    LateDates[j] = moment(LateDates[j]).format('YYYY-MM-DD');
+  }
+  console.log(violationNums);
+  console.log(earlyDates);
+  console.log(LateDates);
+  tableArr = [violations, violationNums, earlyDates, LateDates];
+  console.log(tableArr);
+
+  let table = document.createElement('table');
+for (let row of tableArr) {
+  table.insertRow();
+  for (let cell of row) {
+    let newCell = table.rows[table.rows.length - 1].insertCell();
+    newCell.textContent = cell;
+  }
+}
+document.body.appendChild(table);
+}
+  </script>
+  </body>
+</html>
